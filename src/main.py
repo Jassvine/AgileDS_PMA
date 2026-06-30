@@ -11,12 +11,16 @@ def validate_data(df):
     missing_count = df.isnull().sum().sum()
     duplicate_count = df.duplicated().sum()
     
-    # Identify numerical columns and check if they are all >= 0
+    # Identify numerical columns
     num_df = df.select_dtypes(include=[np.number])
+    
+    # Exclude latitude/longitude from the positive check as they can be negative
+    cols_to_check = [c for c in num_df.columns if 'latitude' not in c.lower() and 'longitude' not in c.lower()]
+    
     positive_check = True
     failing_cols = []
     
-    for col in num_df.columns:
+    for col in cols_to_check:
         if not (num_df[col] >= 0).all():
             positive_check = False
             failing_cols.append(col)
