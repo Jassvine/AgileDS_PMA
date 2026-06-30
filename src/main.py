@@ -7,6 +7,7 @@ def load_data(path='/content/train.csv'):
         df = pd.read_csv(path)
         return df
     except FileNotFoundError:
+        # Fallback for CI/CD environments where the file might not be present
         data = {'median_house_value': [100, 200, 300], 'other': [1, 2, 2]}
         return pd.DataFrame(data)
 
@@ -15,10 +16,10 @@ def validate_data(df):
     # 1. Check for missing values
     missing_count = df.isnull().sum().sum()
     
-    # 2. Check value range (Only on numerical columns)
+    # 2. Check value range (Safely on numerical columns only)
     numerical_cols = df.select_dtypes(include=[np.number]).columns
     if len(numerical_cols) > 0:
-        # Check if all numerical values in the first numerical column are non-negative
+        # Check if values are non-negative (>= 0)
         valid_range = (df[numerical_cols[0]] >= 0).all()
     else:
         valid_range = True
@@ -28,7 +29,7 @@ def validate_data(df):
     
     checks = {
         'missing_values': missing_count,
-        'positive_values': valid_range,
+        'positive_values': bool(valid_range),
         'duplicates': duplicate_count
     }
     return checks
