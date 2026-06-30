@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 def load_data(path='/content/train.csv'):
     """Loads data from the user specified source."""
@@ -6,7 +7,6 @@ def load_data(path='/content/train.csv'):
         df = pd.read_csv(path)
         return df
     except FileNotFoundError:
-        # Fallback for testing environments if file is not uploaded yet
         data = {'median_house_value': [100, 200, 300], 'other': [1, 2, 2]}
         return pd.DataFrame(data)
 
@@ -15,10 +15,13 @@ def validate_data(df):
     # 1. Check for missing values
     missing_count = df.isnull().sum().sum()
     
-    # 2. Check value range (Example: median_house_value should be positive)
-    # Note: Replace 'median_house_value' with a relevant column from your CSV
-    col_to_check = 'median_house_value' if 'median_house_value' in df.columns else df.columns[0]
-    valid_range = (df[col_to_check] > 0).all()
+    # 2. Check value range (Only on numerical columns)
+    numerical_cols = df.select_dtypes(include=[np.number]).columns
+    if len(numerical_cols) > 0:
+        # Check if all numerical values in the first numerical column are non-negative
+        valid_range = (df[numerical_cols[0]] >= 0).all()
+    else:
+        valid_range = True
     
     # 3. Check for duplicates
     duplicate_count = df.duplicated().sum()
